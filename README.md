@@ -30,7 +30,7 @@ tax <- read.csv(system.file("extdata", "tax.csv", package = "CoreExplore"))
 map <- read.csv(system.file("extdata", "map.csv", package = "CoreExplore"))
 
 # Bin every sample at the family level
-bin_by_prevalence(mat = otu, tax_level = tax$family, seed = 1)
+bin_by_prevalence(mat = otu, tax_level = tax$family)
 ```
 
 Split by host to compare cores between groups:
@@ -38,12 +38,12 @@ Split by host to compare cores between groups:
 ```r
 # Human host samples
 human <- map$host.species == "human"
-bin_by_prevalence(mat = otu[human, ], tax_level = tax$family, seed = 1)
+bin_by_prevalence(mat = otu[human, ], tax_level = tax$family)
 title(unique(map$host.species[human]))
 
 # Mouse host samples
 mouse <- map$host.species == "mouse"
-bin_by_prevalence(mat = otu[mouse, ], tax_level = tax$family, seed = 1)
+bin_by_prevalence(mat = otu[mouse, ], tax_level = tax$family)
 title(unique(map$host.species[mouse]))
 ```
 
