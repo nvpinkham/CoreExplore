@@ -51,123 +51,134 @@
 #' @importFrom stats aggregate
 #' @importFrom graphics barplot legend
 #' @export
-bin_by_prevalence <- function(mat,
-                              tax_level,
-                              bin_tax_first = TRUE,
-                              top.X = 20,
-                              only_when_present = TRUE,
-                              seed = NULL) {
-
-  if (ncol(mat) != length(tax_level)) {
-    stop("mismatched taxonomy: ncol(mat) must equal length(tax_level)")
-  } else {
+bin_by_prevalence <- function(mat = otu,
+                              tax_level = tax$family, 
+                              bin_tax_first = T, 
+                              top.X = 20, 
+                              only_when_precent = T){
+  
+  if(ncol(mat) != length(tax_level)){
+    stop("missmatched taxonomy")
+  }else{
     message("taxonomy matches")
   }
-
+  
   tax_level[is.na(tax_level)] <- "Unknown"
-
-  if (bin_tax_first) {
-
+  
+  if(bin_tax_first){
+    
     mat.t.agg <- aggregate(t(mat), list(tax_level), sum)
     rownames(mat.t.agg) <- mat.t.agg$Group.1
-
+    
     tax_level <- mat.t.agg$Group.1
     mat.t.agg$Group.1 <- NULL
     mat <- t(mat.t.agg)
   }
-
+  
   mat.bi <- mat > 0
-
+  
   bins <- seq(0, nrow(mat), length.out = 11)
   bins <- bins[-11]
   names(bins) <- paste0(0:9 * 10, "-", 1:10 * 10, "%")
-
+  
   binning <- NULL
-
-  for (i in seq_len(ncol(mat.bi))) {
-    binning[i] <- names(rev(bins[sum(mat.bi[, i]) >= bins])[1])
+  
+  for(i in 1 :ncol(mat.bi)){
+    
+    binning[i] <- names(rev(bins[sum(mat.bi[,i]) >= bins])[1])
   }
-
+  
   print(table(binning))
-
+  
   key <- as.data.frame(cbind(tax_level, binning))
-
+  
+  mat.percent <- mat / rowSums(mat) * 100
+  colMeans(mat.percent)[1:10]
+  
   levels <- sort(unique(key$binning))
-
+  
   tax_level.unique <- unique(tax_level)
-
+  
   res <- as.data.frame(matrix(ncol = length(levels),
                               nrow = length(tax_level.unique)))
-
+  
   colnames(res) <- levels
   rownames(res) <- tax_level.unique
-
-  for (i in seq_along(levels)) {
-
-    key.i <- key[key$binning == levels[i], ]
-    mat.i <- mat[, key$binning == levels[i]]
-
+  
+  for(i in 1 : length(levels)){
+    
+    key.i <- key[key$binning == levels[i] , ]
+    mat.i <- mat[ , key$binning == levels[i]]
+    #mat.i <- (mat.i / rowSums(mat.i)) * 100
+    
+    
     mat.i.agg <- aggregate(t(mat.i), list(key.i$tax_level), sum)
-    rownames(mat.i.agg) <- mat.i.agg$Group.1
-    mat.i.agg$Group.1 <- NULL
-
+    rownames(mat.i.agg) <- mat.i.agg$Group.1 
+    mat.i.agg$Group.1  <- NULL
+    
     mat.i.agg <- t(mat.i.agg)
-
-    if (only_when_present) {
+    
+    if(only_when_precent){
+      
       mat.i.agg[mat.i.agg == 0] <- NA
       lab <- "% of population when present"
-    } else {
+    }else{
       lab <- "% of population"
+      
     }
-
-    res.i <- colMeans(mat.i.agg, na.rm = TRUE)
+    
+    res.i <- colMeans(mat.i.agg, na.rm = T)
     m <- match(names(res.i), rownames(res))
-
+    
     res[m, i] <- res.i
+    
   }
-
-  color <- c("pink1", "green", "mediumpurple1", "slateblue1",
-             "gold", "orchid", "turquoise2", "skyblue", "steelblue",
-             "tan2", "navyblue", "orange", "orangered", "coral2",
-             "palevioletred", "violetred", "darkred", "springgreen2",
-             "yellowgreen", "palegreen4", "wheat2", "tan", "magenta",
+  
+  color <- c("pink1", "green", "mediumpurple1", "slateblue1", 
+             "gold", "orchid", "turquoise2", "skyblue", "steelblue", 
+             "tan2", "navyblue", "orange", "orangered", "coral2", 
+             "palevioletred", "violetred", "darkred", "springgreen2", 
+             "yellowgreen", "palegreen4", "wheat2", "tan", "magenta", 
              "tan3", "brown", "yellow", "snow2", "blue")
-
-  o <- order(rowSums(res, na.rm = TRUE), decreasing = TRUE)
+  
+  o <- order(rowSums(res, na.rm = T), decreasing = T)
   res <- res[o, ]
-
+  
+  # p <- rowSums(res, na.rm = T) > 20
+  #  res<- res [p,]
+  
   res[is.na(res)] <- 0
-
+  res.all <- res
+  
   top.X <- min(nrow(res), top.X)
-
-  res <- res[1:top.X, ]
-
-  if (!is.null(seed)) {
-    set.seed(seed)
-  }
-
+  
+  res <- res[1 : top.X, ]
+  
   cols <- sample(color, nrow(res))
-
+  
   col.key <- cbind(rownames(res), cols)
-
-  p <- col.key[, 1] == "Unknown"
-  col.key[p, 2] <- "grey50"
-
+  
+  p <- col.key[,1] == "Unknown"  
+  
+  col.key[p , 2 ] <- "grey50"
+  
   res <- res / mean(rowSums(mat)) * 100
-
-  barplot(as.matrix(res), width = 1, beside = FALSE,
+  
+  #barplot(as.matrix(res.all))
+  
+  barplot(as.matrix(res), width = 1, beside = F,
           space = 0.1, col = col.key[, 2],
-          xlim = c(0, ncol(res) * 2.1),
+          xlim = c(0,  ncol(res) * 2.1),
           las = 2,
           ylab = lab,
-          font = 4, font.lab = 4,
+          font = 4, font.lab = 4, 
           cex.axis = 1, cex.names = 1)
-
-  legend("right",
-         bty = "n",
-         text.font = 4,
-         fill = rev(col.key[, 2]),
+  
+  legend("right", 
+         bty = "n", 
+         text.font = 4, 
+         fill = rev(col.key[, 2]), 
          legend = rev(col.key[, 1]))
-
-  invisible(col.key)
+  
+  return(col.key)                                                       
 }
