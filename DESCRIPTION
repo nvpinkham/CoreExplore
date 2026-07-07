@@ -1,0 +1,24 @@
+Package: CoreExplore
+Type: Package
+Title: Explore Microbiome Core Taxa by Prevalence
+Version: 0.1.0
+Authors@R: person(given = "Nick",
+                  family = "Pinkham",
+                  role = c("aut", "cre"),
+                  email = "nickvpinkham@gmail.com")
+Description: Tools for exploring the core microbiome of a community-by-feature
+    count table. The main function bins taxa by how prevalent they are across
+    samples (0-10%, 10-20%, ... of samples) and summarises their mean relative
+    abundance within each prevalence bin as a stacked bar plot, optionally
+    aggregating features to a supplied taxonomic level first.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: false
+Depends: R (>= 3.5.0)
+Imports:
+    graphics,
+    stats
+Suggests:
+    knitr,
+    rmarkdown
+RoxygenNote: 7.3.1
